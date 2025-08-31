@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import ProductGrid from "./component/ProductGrid";
 
 export default function Home() {
