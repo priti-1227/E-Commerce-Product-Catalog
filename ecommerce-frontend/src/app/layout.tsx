@@ -1,10 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Navbar from "./component/Navbar";
-
-
-
+import { Toaster } from "react-hot-toast";
+import StoreProvider from "./StoreProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* The Navbar is removed from here */}
       <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
+        <StoreProvider>
+          <Toaster position="top-center" />
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );
