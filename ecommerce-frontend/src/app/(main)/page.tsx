@@ -22,8 +22,6 @@ export default function HomePage({
 }: {
   searchParams?: { query?: string; category?: string; sort?: string };
 }) {
-  const searchQuery = searchParams?.query;
-
   return (
     <section className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">

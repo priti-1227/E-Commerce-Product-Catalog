@@ -1,40 +1,133 @@
-// src/app/(main)/cart/page.tsx
+"use client";
+
+import {
+  useGetCartQuery,
+  useUpdateCartItemMutation,
+  useDeleteCartItemMutation,
+} from "@/features/cart/cartApiSlice";
 import { Button } from "@/components/ui/button";
-import { DUMMY_CART_ITEMS } from "@/lib/dummy-data";
-import { AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { CartItems } from "./CartItems";
+import Image from "next/image";
+import { Loader2, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { Input } from "@/components/ui/input";
+import { ref } from "yup";
+import { QuantitySelector } from "@/app/component/cart/QuantitySelector";
 
-// In a real app, you'd check for a session cookie or token here.
-// For now, we simulate this server-side check.
-async function checkUserLoggedIn(): Promise<boolean> {
-  // Change to `true` to see the logged-in cart view.
-  return false;
-}
+export default function CartPage() {
+  const {
+    data: cartItems,
+    isLoading,
+    isSuccess,
+    isError,
+    refetch,
+  } = useGetCartQuery();
+  const [updateCartItem, { isLoading: isUpdating }] =
+    useUpdateCartItemMutation();
+  const [deleteCartItem, { isLoading: isDeleting }] =
+    useDeleteCartItemMutation();
 
-export default async function CartPage() {
-  const isLoggedIn = await checkUserLoggedIn();
+  const handleQuantityChange = (itemId: number, newQuantity: number) => {
+    updateCartItem({ itemId, quantity: newQuantity });
+    refetch();
+  };
 
-  if (!isLoggedIn) {
+  const handleRemoveItem = async (itemId: number) => {
+    try {
+      await deleteCartItem(itemId).unwrap();
+      toast.success("Item removed from cart.");
+    } catch (error) {
+      toast.error("Failed to remove item.");
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="container mx-auto py-20 text-center">
-        <div className="max-w-md mx-auto bg-gray-50 p-8 rounded-lg border">
-          <AlertCircle className="w-12 h-12 mx-auto text-yellow-500" />
-          <h1 className="text-2xl font-bold mt-4">Please Log In</h1>
-          <p className="text-gray-600 mt-2 mb-6">
-            You need to be logged in to view your cart and add items.
-          </p>
-          <Button asChild>
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </div>
+      <div className="text-center py-20">
+        <Loader2 className="animate-spin mx-auto" />
       </div>
     );
   }
 
-  // If the user is logged in, fetch their cart items.
-  // We'll use dummy data for now.
-  const cartItems = DUMMY_CART_ITEMS;
+  if (isError || !isSuccess || !cartItems) {
+    return (
+      <div className="text-center py-20 text-red-500">Error loading cart.</div>
+    );
+  }
 
-  return <CartItems items={cartItems} />;
+  if (cartItems.length === 0) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-2xl font-bold">Your cart is empty</h1>
+        <Button asChild className="mt-4">
+          <Link href="/products">Continue Shopping</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const subtotal = cartItems.reduce(
+    (acc, item) => acc + parseFloat(item.price as any) * item.quantity,
+    0
+  );
+
+  return (
+    <div className="container mx-auto py-10 px-4 pt-24">
+      <h1 className="text-3xl font-bold mb-6">Your Shopping Cart</h1>
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          {cartItems.map((item) => (
+            <div
+              key={item.cart_item_id}
+              className="flex items-center gap-4 p-4 border rounded-lg"
+            >
+              <Image
+                src={item.image_url || "/placeholder.svg"}
+                alt={item.name}
+                width={100}
+                height={100}
+                className="rounded-md"
+              />
+              <div className="flex-grow">
+                <h3 className="font-semibold">{item.name}</h3>
+                <p className="text-gray-600">
+                  ₹{parseFloat(item.price as any).toFixed(2)}
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                {/* --- REPLACE THE INPUT WITH THE NEW COMPONENT --- */}
+                <QuantitySelector
+                  initialQuantity={item.quantity}
+                  onQuantityChange={(newQuantity) =>
+                    handleQuantityChange(item.cart_item_id, newQuantity)
+                  }
+                  isLoading={isUpdating}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleRemoveItem(item.cart_item_id)}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-gray-50 p-6 rounded-lg h-fit border">
+          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+          </div>
+          <Button className="w-full mt-6" size="lg">
+            Proceed to Checkout
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
