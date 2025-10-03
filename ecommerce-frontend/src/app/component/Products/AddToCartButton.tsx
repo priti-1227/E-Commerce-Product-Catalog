@@ -1,41 +1,49 @@
 "use client";
 
+import { RootState } from "@/app/store";
 import { Button } from "@/components/ui/button";
+import { useAddToCartMutation } from "@/features/cart/cartApiSlice";
 import { ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-
-// A mock function to check if the user is logged in.
-// In a real app, this would check a global state, context, or a cookie.
-const isUserLoggedIn = (): boolean => {
-  // For now, we'll return false to simulate a logged-out user.
-  // Change this to `true` to test the logged-in behavior.
-  return false;
-};
+import { useSelector } from "react-redux";
 
 export function AddToCartButton({ productId }: { productId: number }) {
   const router = useRouter();
+  const [addToCart, { isLoading }] = useAddToCartMutation();
+  // Get the user's login status from the global Redux state
+  const { token } = useSelector((state: RootState) => state.auth);
+  console.log(token, "test token");
 
-  const handleAddToCart = () => {
-    if (!isUserLoggedIn()) {
-      // If the user is not logged in, redirect them to the login page.
-      // We can also pass a callback URL to return them here after login.
+  const handleAddToCart = async () => {
+    if (!token) {
       toast.error("Please log in to add items to your cart.");
-      router.push(`/login?callbackUrl=/products/${productId}`);
-    } else {
-      // If the user is logged in, add the item to the cart.
-      // This is where you would call your cart logic (e.g., a server action or API call).
-      console.log(`Product ${productId} added to cart!`);
-      // Optionally, redirect to the cart page after adding.
-      // router.push("/cart");
-      toast.success("Product added to your cart!");
+      router.push("/login");
+      return;
+    }
+    try {
+      await addToCart({ productId, quantity: 1 }).unwrap();
+      toast.success("Item added to cart!");
+    } catch (error) {
+      toast.error("Failed to add item to cart.");
+      console.error("Add to cart error:", error);
     }
   };
 
   return (
-    <Button className="w-full mt-2" onClick={handleAddToCart}>
-      <ShoppingCart className="w-4 h-4 mr-2" />
-      Add to Cart
+    <Button
+      className="w-full mt-2"
+      onClick={handleAddToCart}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        "Adding..."
+      ) : (
+        <>
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Add to Cart
+        </>
+      )}
     </Button>
   );
 }

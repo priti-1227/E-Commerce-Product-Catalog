@@ -19,12 +19,14 @@ function GridSkeleton() {
 }
 
 // The page is no longer async
-export default function ProductsPage({
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams?: { query?: string; category?: string; sort?: string };
 }) {
-  const query = searchParams?.query;
+  const query = searchParams?.query ?? "";
+  const sort = searchParams?.sort ?? "";
+  const category = searchParams?.category ?? "";
 
   return (
     <div className="p-6 pt-24">
@@ -34,11 +36,7 @@ export default function ProductsPage({
       </div>
 
       <Suspense fallback={<GridSkeleton />}>
-        <FilteredProductGrid
-          query={searchParams?.query}
-          category={searchParams?.category}
-          sort={searchParams?.sort}
-        />
+        <FilteredProductGrid query={query} category={category} sort={sort} />
       </Suspense>
     </div>
   );

@@ -10,6 +10,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerDefinition from './config/swagger.js';
 import authRoutes from './api/routes/auth.routes.js'
+import cartRoutes from './api/routes/cart.routes.js';
 // Load environment variables
 dotenv.config();
 
@@ -21,7 +22,7 @@ app.use(express.json());
 // --- USE CORS MIDDLEWARE ---
 // This allows your frontend at localhost:3000 to make requests to this server.
 app.use(cors({
-  origin: 'http://localhost:3001' 
+  origin: 'http://localhost:3000' 
 }));
 
 // --- SWAGGER CONFIGURATION ---
@@ -47,7 +48,7 @@ app.use('/api/auth', authRoutes);
 // let the 'productRoutes' router handle it."
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-
+app.use('/api/cart', cartRoutes);
 
 
 
