@@ -17,7 +17,7 @@ const initialState: AuthState = {
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
+ initialState,
   reducers: {
     setCredentials: (
       state,
@@ -29,7 +29,9 @@ const authSlice = createSlice({
     logOut: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem('authToken');
+        if (typeof window !== "undefined") {
+        localStorage.removeItem("authToken");
+      }
     },
   },
 });
